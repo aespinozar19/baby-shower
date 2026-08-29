@@ -266,7 +266,7 @@
   const API_URL = 'https://script.google.com/macros/s/AKfycby8iVqr6G6E9YRwNOQNkkLUCQOS5tmrys9aGzuq4O4FOg0RrXxi0iMSpjvbkUhTMsbgUg/exec';
 
   let codigo = '';
-  let fechaEvento = '';
+  let fechaEvento = config.fechaLimite;
   let horaEvento = '';
   let direccionEvento = '';
   let linkMapsEvento = '';
@@ -313,7 +313,7 @@
   };
 
 
-  function bloqueDetalles() {
+    function bloqueDetalles() {
 
     return `
       <div class="detalles">
@@ -334,6 +334,11 @@
             ${direccionEvento}
             ${linkMapsEvento ? `<br><a href="${linkMapsEvento}" target="_blank" class="link-mapa">Ver ubicación en el mapa →</a>` : ''}
           </span>
+        </div>
+
+        <div class="detalle-item">
+          <span class="detalle-icono">⏳</span>
+          <span>Confirma hasta el ${fechaLimiteTexto}</span>
         </div>
 
       </div>
