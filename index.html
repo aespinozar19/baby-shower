@@ -285,3 +285,245 @@
 
       window[callbackName] = function(data) {
         delete window[callbackName];
+        document.body.removeChild(script);
+        resolve(data);
+      };
+
+      const script = document.createElement('script');
+
+      script.src =
+        url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+
+      script.onerror = function() {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        reject(new Error('Error de red'));
+      };
+
+      document.body.appendChild(script);
+
+    });
+
+  }
+
+
+  /**
+   * Al cargar la página
+   */
+  window.onload = async function() {
+
+    const parametros = new URLSearchParams(window.location.search);
+    codigo = parametros.get('codigo');
+
+    if (!codigo) {
+      mostrarError('No se encontró un código de invitación.');
+      return;
+    }
+
+    try {
+
+      // 1. Cargar configuración del evento
+      const config = await jsonp(`${API_URL}?action=config`);
+
+      fechaEvento = config.fecha;
+      horaEvento = config.hora;
+      direccionEvento = config.direccion;
+      linkMapsEvento = config.linkMaps;
+      fechaLimiteTexto = config.fechaLimite;
+
+      document.getElementById('portada').innerHTML =
+        `<img src="${config.imagenUrl}" alt="Baby Shower">`;
+
+      // 2. Buscar al invitado
+      const resultado =
+        await jsonp(`${API_URL}?action=buscar&codigo=${encodeURIComponent(codigo)}`);
+
+      mostrarInvitado(resultado);
+
+    } catch (error) {
+      mostrarError('Ocurrió un error al cargar la invitación. Intenta nuevamente.');
+    }
+
+  };
+
+
+  function bloqueDetalles() {
+
+    return `
+      <div class="detalles">
+
+        <div class="detalle-item">
+          <span class="detalle-icono">📅</span>
+          <span>${fechaEvento}</span>
+        </div>
+
+        <div class="detalle-item">
+          <span class="detalle-icono">🕐</span>
+          <span>${horaEvento}</span>
+        </div>
+
+        <div class="detalle-item">
+          <span class="detalle-icono">📍</span>
+          <span>
+            ${direccionEvento}
+            ${linkMapsEvento ? `<br><a href="${linkMapsEvento}" target="_blank" class="link-mapa">Ver ubicación en el mapa →</a>` : ''}
+          </span>
+        </div>
+
+        <div class="detalle-item">
+          <span class="detalle-icono">⏳</span>
+          <span>Confirma hasta el ${fechaLimiteTexto}</span>
+        </div>
+
+      </div>
+    `;
+
+  }
+
+
+  function mostrarInvitado(resultado) {
+
+    if (!resultado.existe) {
+      mostrarError('El código de invitación no es válido.');
+      return;
+    }
+
+    if (resultado.estado === 'Confirmado' || resultado.estado === 'No asistirá') {
+      mostrarError('Esta invitación ya fue registrada anteriormente.');
+      return;
+    }
+
+    document.getElementById('contenido').innerHTML = `
+
+      <h1>Baby Shower</h1>
+
+      <div class="subtitulo">
+        Diego y Sofía
+      </div>
+
+      ${bloqueDetalles()}
+
+      <div class="invitado">
+        Hola ${resultado.invitado} 😊
+      </div>
+
+      <label>¿Confirmas tu asistencia?</label>
+
+      <select id="asistencia" onchange="cambiarAsistencia()">
+        <option value="">Selecciona una opción</option>
+        <option value="Sí">Sí, asistiré</option>
+        <option value="No">No podré asistir</option>
+      </select>
+
+      <div id="personas" style="display:none;">
+
+        <label>¿Cuántos adultos asistirán en total?</label>
+        <select id="adultos">${generarOpciones(1, 4)}</select>
+
+        <label>¿Cuántos niños asistirán?</label>
+        <select id="ninos">${generarOpciones(0, 4)}</select>
+
+      </div>
+
+      <button id="boton" onclick="registrar()">
+        Confirmar asistencia
+      </button>
+
+    `;
+
+  }
+
+
+  function cambiarAsistencia() {
+
+    const asistencia = document.getElementById('asistencia').value;
+    const personas = document.getElementById('personas');
+
+    personas.style.display = (asistencia === 'Sí') ? 'block' : 'none';
+  }
+
+
+  function generarOpciones(min, max) {
+
+    let html = '';
+
+    for (let i = min; i <= max; i++) {
+      html += `<option value="${i}">${i}</option>`;
+    }
+
+    return html;
+  }
+
+
+  async function registrar() {
+
+    const asistencia = document.getElementById('asistencia').value;
+
+    if (!asistencia) {
+      alert('Selecciona si asistirás o no.');
+      return;
+    }
+
+    let adultos = 0;
+    let ninos = 0;
+
+    if (asistencia === 'Sí') {
+      adultos = Number(document.getElementById('adultos').value);
+      ninos = Number(document.getElementById('ninos').value);
+    }
+
+    const boton = document.getElementById('boton');
+    boton.disabled = true;
+    boton.innerText = 'Registrando...';
+
+    try {
+
+      const url =
+        `${API_URL}?action=registrar&codigo=${encodeURIComponent(codigo)}` +
+        `&asistencia=${encodeURIComponent(asistencia)}` +
+        `&adultos=${adultos}&ninos=${ninos}`;
+
+      const resultado = await jsonp(url);
+
+      mostrarResultado(resultado);
+
+    } catch (error) {
+      mostrarError('Ocurrió un error al registrar. Intenta nuevamente.');
+    }
+
+  }
+
+
+  function mostrarResultado(resultado) {
+
+    if (!resultado.exito) {
+      mostrarError(resultado.mensaje);
+      return;
+    }
+
+    document.getElementById('contenido').innerHTML = `
+      <div class="exito">
+        <h1>✅ ¡Listo!</h1>
+        <p>${resultado.mensaje}</p>
+        <p>¡Gracias por confirmar! 🎉</p>
+      </div>
+    `;
+
+  }
+
+
+  function mostrarError(mensaje) {
+
+    document.getElementById('contenido').innerHTML = `
+      <div class="error">
+        <h1>⚠️</h1>
+        <p>${mensaje}</p>
+      </div>
+    `;
+
+  }
+
+</script>
+
+</body>
+</html>
