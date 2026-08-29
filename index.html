@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8">
+  <base target="_top">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <title>Baby Shower</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(180deg, #f7e6d8 0%, #f3d9e3 45%, #f7e6d8 100%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .contenedor {
+      width: 100%;
+      max-width: 560px;
+      margin: 0 auto;
+      background: #fffdfa;
+      overflow: hidden;
+      min-height: 100vh;
+    }
+
+    @media (min-width: 600px) {
+      body {
+        padding: 30px 16px;
+        align-items: center;
+      }
+
+      .contenedor {
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(196, 155, 96, 0.3);
+        border: 1px solid #ecd4b8;
+        min-height: 0;
+      }
+    }
+
+    .portada {
+      width: 100%;
+      display: block;
+      background: linear-gradient(135deg, #f3d9e3, #ecd4b8);
+      min-height: 120px;
+    }
+
+    .portada img {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+    }
+
+    .cuerpo {
+      padding: 32px 24px 40px;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 0 0 6px;
+      color: #b5476a;
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitulo {
+      text-align: center;
+      color: #c98499;
+      margin-bottom: 28px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .detalles {
+      background: #fdf6ee;
+      border: 1px solid #ecd4b8;
+      border-radius: 16px;
+      padding: 20px 22px;
+      margin-bottom: 28px;
+    }
+
+    .detalle-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      font-size: 17px;
+      color: #6b3f4d;
+      margin-bottom: 16px;
+      line-height: 1.4;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .detalle-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .detalle-icono {
+      font-size: 22px;
+      line-height: 1.3;
+      flex-shrink: 0;
+    }
+
+    .link-mapa {
+      color: #b5476a;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 15.5px;
+      display: inline-block;
+      margin-top: 6px;
+    }
+
+    .link-mapa:hover {
+      text-decoration: underline;
+    }
+
+    .invitado {
+      text-align: center;
+      font-size: 23px;
+      font-weight: 700;
+      color: #4a2c36;
+      margin-bottom: 26px;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #4a2c36;
+      font-size: 16.5px;
+    }
+
+    select {
+      width: 100%;
+      padding: 16px;
+      font-size: 17px;
+      border-radius: 12px;
+      border: 1.5px solid #f0c4d3;
+      box-sizing: border-box;
+      background: #fffafb;
+      color: #4a2c36;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b5476a' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 18px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 30px;
+      padding: 18px;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #c8688b, #b5476a);
+      color: white;
+      transition: opacity 0.2s;
+      box-shadow: 0 6px 16px rgba(181, 71, 106, 0.3);
+    }
+
+    button:hover {
+      opacity: 0.92;
+    }
+
+    button:disabled {
+      background: #d8adba;
+      box-shadow: none;
+      cursor: default;
+    }
+
+    #cargando {
+      text-align: center;
+      color: #b5476a;
+      font-size: 17px;
+      padding: 20px 0;
+    }
+
+    .error,
+    .exito {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .error h1 {
+      color: #b00020;
+      font-size: 44px;
+      margin-bottom: 14px;
+    }
+
+    .error p {
+      font-size: 17px;
+      color: #7a4a58;
+      line-height: 1.5;
+    }
+
+    .exito h1 {
+      color: #267326;
+      font-size: 30px;
+    }
+
+    .exito p {
+      font-size: 17px;
+      color: #4a2c36;
+      line-height: 1.6;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="contenedor">
+
+  <div class="portada" id="portada"></div>
+
+  <div class="cuerpo">
+
+    <div id="contenido">
+
+      <h1>Baby Shower</h1>
+
+      <div class="subtitulo">
+        Diego y Sofía
+      </div>
+
+      <div id="cargando">
+        Verificando invitación...
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  // ⚠️ IMPORTANTE: reemplaza esto con la URL de tu Web App de Apps Script
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzxkIrXoayVXOitH23BdCRfR3UwRloxA2Da0z2gzpRsizrv6aNr8SSpo4u9qbkfbDQP0Q/exec';
+
+  let codigo = '';
+  let fechaEvento = '';
+  let horaEvento = '';
+  let direccionEvento = '';
+  let linkMapsEvento = '';
+
+
+  /**
+   * Al cargar la página
+   */
+  window.onload = async function() {
+
+    const parametros = new URLSearchParams(window.location.search);
+    codigo = parametros.get('codigo');
+
+    if (!codigo) {
+      mostrarError('No se encontró un código de invitación.');
+      return;
+    }
+
+    try {
+
+      // 1. Cargar configuración del evento (imagen, fecha, hora, lugar)
+      const respConfig = await fetch(`${API_URL}?action=config`);
+      const config = await respConfig.json();
+
+      fechaEvento = config.fecha;
+      horaEvento = config.hora;
+      direccionEvento = config.direccion;
+      linkMapsEvento = config.linkMaps;
+
+      document.getElementById('portada').innerHTML =
+        `<img src="${config.imagenUrl}" alt="Baby Shower">`;
+
+      // 2. Buscar al invitado
+      const respInvitado =
+        await fetch(`${API_URL}?action=buscar&codigo=${encodeURIComponent(codigo)}`);
+      const resultado = await respInvitado.json();
+
+      mostrarInvitado(resultado);
+
+    } catch (error) {
+      mostrarError('Ocurrió un error al cargar la invitación. Intenta nuevamente.');
+    }
+
+  };
+
+
+  function bloqueDetalles() {
+
+    return `
+      <div class="detalles">
+
+        <div class="detalle-item">
+          <span class="detalle-icono">📅</span>
+          <span>${fechaEvento}</span>
+        </div>
+
+        <div class="detalle-item">
+          <span class="detalle-icono">🕐</span>
+          <span>${horaEvento}</span>
+        </div>
+
+        <div class="detalle-item">
+          <span class="detalle-icono">📍</span>
+          <span>
+            ${direccionEvento}
+            ${linkMapsEvento ? `<br><a href="${linkMapsEvento}" target="_blank" class="link-mapa">Ver ubicación en el mapa →</a>` : ''}
+          </span>
+        </div>
+
+      </div>
+    `;
+
+  }
+
+
+  function mostrarInvitado(resultado) {
+
+    if (!resultado.existe) {
+      mostrarError('El código de invitación no es válido.');
+      return;
+    }
+
+    if (resultado.estado === 'Confirmado' || resultado.estado === 'No asistirá') {
+      mostrarError('Esta invitación ya fue registrada anteriormente.');
+      return;
+    }
+
+    document.getElementById('contenido').innerHTML = `
+
+      <h1>Baby Shower</h1>
+
+      <div class="subtitulo">
+        Diego y Sofía
+      </div>
+
+      ${bloqueDetalles()}
+
+      <div class="invitado">
+        Hola ${resultado.invitado} 😊
+      </div>
+
+      <label>¿Confirmas tu asistencia?</label>
+
+      <select id="asistencia" onchange="cambiarAsistencia()">
+        <option value="">Selecciona una opción</option>
+        <option value="Sí">Sí, asistiré</option>
+        <option value="No">No podré asistir</option>
+      </select>
+
+      <div id="personas" style="display:none;">
+
+        <label>¿Cuántos adultos asistirán en total?</label>
+        <select id="adultos">${generarOpciones(1, 4)}</select>
+
+        <label>¿Cuántos niños asistirán?</label>
+        <select id="ninos">${generarOpciones(0, 4)}</select>
+
+      </div>
+
+      <button id="boton" onclick="registrar()">
+        Confirmar asistencia
+      </button>
+
+    `;
+
+  }
+
+
+  function cambiarAsistencia() {
+
+    const asistencia = document.getElementById('asistencia').value;
+    const personas = document.getElementById('personas');
+
+    personas.style.display = (asistencia === 'Sí') ? 'block' : 'none';
+  }
+
+
+  function generarOpciones(min, max) {
+
+    let html = '';
+
+    for (let i = min; i <= max; i++) {
+      html += `<option value="${i}">${i}</option>`;
+    }
+
+    return html;
+  }
+
+
+  async function registrar() {
+
+    const asistencia = document.getElementById('asistencia').value;
+
+    if (!asistencia) {
+      alert('Selecciona si asistirás o no.');
+      return;
+    }
+
+    let adultos = 0;
+    let ninos = 0;
+
+    if (asistencia === 'Sí') {
+      adultos = Number(document.getElementById('adultos').value);
+      ninos = Number(document.getElementById('ninos').value);
+    }
+
+    const boton = document.getElementById('boton');
+    boton.disabled = true;
+    boton.innerText = 'Registrando...';
+
+    try {
+
+      const url =
+        `${API_URL}?action=registrar&codigo=${encodeURIComponent(codigo)}` +
+        `&asistencia=${encodeURIComponent(asistencia)}` +
+        `&adultos=${adultos}&ninos=${ninos}`;
+
+      const resp = await fetch(url);
+      const resultado = await resp.json();
+
+      mostrarResultado(resultado);
+
+    } catch (error) {
+      mostrarError('Ocurrió un error al registrar. Intenta nuevamente.');
+    }
+
+  }
+
+
+  function mostrarResultado(resultado) {
+
+    if (!resultado.exito) {
+      mostrarError(resultado.mensaje);
+      return;
+    }
+
+    document.getElementById('contenido').innerHTML = `
+      <div class="exito">
+        <h1>✅ ¡Listo!</h1>
+        <p>${resultado.mensaje}</p>
+        <p>¡Gracias por confirmar! 🎉</p>
+      </div>
+    `;
+
+  }
+
+
+  function mostrarError(mensaje) {
+
+    document.getElementById('contenido').innerHTML = `
+      <div class="error">
+        <h1>⚠️</h1>
+        <p>${mensaje}</p>
+      </div>
+    `;
+
+  }
+
+</script>
+
+</body>
+</html>
