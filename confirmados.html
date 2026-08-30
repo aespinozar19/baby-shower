@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Confirmados - Baby Shower</title>
+
+  <style>
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(180deg, #f7e6d8 0%, #f3d9e3 45%, #f7e6d8 100%);
+      margin: 0;
+      padding: 24px 16px 60px;
+      color: #4a2c36;
+    }
+
+    .contenedor {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .volver {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: #b5476a;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    h1 {
+      color: #b5476a;
+      font-size: 24px;
+      margin: 0 0 4px;
+    }
+
+    .subtitulo {
+      color: #c98499;
+      margin-bottom: 24px;
+      font-size: 14.5px;
+    }
+
+    .tarjeta-invitado {
+      background: #fffdfa;
+      border: 1px solid #ecd4b8;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(196, 155, 96, 0.12);
+    }
+
+    .fila-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .nombre {
+      font-weight: 700;
+      font-size: 16.5px;
+    }
+
+    .total {
+      background: #fdf6ee;
+      border: 1px solid #ecd4b8;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #b5476a;
+    }
+
+    .detalle {
+      font-size: 13.5px;
+      color: #7a4a58;
+      margin-top: 4px;
+    }
+
+    .regalo-tag {
+      display: inline-block;
+      margin-top: 8px;
+      background: #f3d9e3;
+      color: #8a3c58;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    #vacio, #cargando {
+      text-align: center;
+      color: #7a4a58;
+      padding: 40px 0;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="contenedor">
+
+  <a class="volver" href="dashboard.html">← Volver al panel</a>
+
+  <h1>Invitados confirmados</h1>
+  <div class="subtitulo">Personas que ya confirmaron asistencia</div>
+
+  <div id="contenido">
+    <div id="cargando">Cargando...</div>
+  </div>
+
+</div>
+
+
+<script>
+
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwJpgnI9n4zdA3MBl58zZloGHcj8CbV1hdbJlYTj2gvee4UUpsdvihPHV4eE3bylqo_fw/exec';
+
+
+  function jsonp(url) {
+
+    return new Promise((resolve, reject) => {
+
+      const callbackName =
+        'jsonp_callback_' + Math.round(100000 * Math.random());
+
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        resolve(data);
+      };
+
+      const script = document.createElement('script');
+
+      script.src =
+        url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+
+      script.onerror = function() {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        reject(new Error('Error de red'));
+      };
+
+      document.body.appendChild(script);
+
+    });
+
+  }
+
+
+  async function cargarDatos() {
+
+    try {
+
+      const r = await jsonp(`${API_URL}?action=confirmados`);
+      renderizar(r.confirmados);
+
+    } catch (error) {
+      document.getElementById('contenido').innerHTML =
+        '<div id="cargando">Ocurrió un error al cargar los datos.</div>';
+    }
+
+  }
+
+
+  function renderizar(lista) {
+
+    if (!lista || lista.length === 0) {
+      document.getElementById('contenido').innerHTML =
+        '<div id="vacio">Aún no hay invitados confirmados.</div>';
+      return;
+    }
+
+    let html = '';
+
+    lista.forEach(c => {
+
+      html += `
+        <div class="tarjeta-invitado">
+          <div class="fila-top">
+            <div class="nombre">${c.invitado}</div>
+            <div class="total">${c.total} persona${c.total !== 1 ? 's' : ''}</div>
+          </div>
+          <div class="detalle">👤 ${c.adultos} adulto${c.adultos !== 1 ? 's' : ''} · 🧒 ${c.ninos} niño${c.ninos !== 1 ? 's' : ''}</div>
+          <div class="detalle">Confirmó el ${c.fecha}</div>
+          <div class="regalo-tag">🎁 ${c.regalo}</div>
+        </div>
+      `;
+
+    });
+
+    document.getElementById('contenido').innerHTML = html;
+
+  }
+
+
+  cargarDatos();
+
+</script>
+
+</body>
+</html>
