@@ -124,6 +124,23 @@
       backdrop-filter: blur(4px);
     }
 
+    #buscador {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 15px;
+      border-radius: 12px;
+      border: 1.5px solid #ecd4b8;
+      background: #fffdfa;
+      color: #4a2c36;
+      margin-bottom: 18px;
+      box-sizing: border-box;
+    }
+
+    #buscador:focus {
+      outline: none;
+      border-color: #c8688b;
+    }
+
   </style>
 
 </head>
@@ -138,6 +155,12 @@
   <h1>Pendientes de enviar</h1>
   <div class="subtitulo">Invitados con nombre asignado que aún no han recibido su invitación</div>
 
+  <input
+    type="text"
+    id="buscador"
+    placeholder="Buscar por nombre o teléfono..."
+    oninput="filtrar()">
+  
   <div id="contenido">
     <div id="cargando">Cargando...</div>
   </div>
@@ -148,6 +171,8 @@
 <script>
 
   const API_URL = 'https://script.google.com/macros/s/AKfycbwJpgnI9n4zdA3MBl58zZloGHcj8CbV1hdbJlYTj2gvee4UUpsdvihPHV4eE3bylqo_fw/exec';
+
+  let listaCompleta = [];
 
 
   function jsonp(url) {
@@ -186,7 +211,8 @@
     try {
 
       const r = await jsonp(`${API_URL}?action=pendientes`);
-      renderizar(r.pendientes);
+      listaCompleta = r.pendientes || [];
+      renderizar(listaCompleta);
 
     } catch (error) {
       document.getElementById('contenido').innerHTML =
@@ -196,11 +222,31 @@
   }
 
 
+  function filtrar() {
+
+    const texto =
+      document.getElementById('buscador').value.trim().toLowerCase();
+
+    if (!texto) {
+      renderizar(listaCompleta);
+      return;
+    }
+
+    const filtrada = listaCompleta.filter(p =>
+      p.invitado.toLowerCase().includes(texto) ||
+      (p.whatsapp || '').toLowerCase().includes(texto)
+    );
+
+    renderizar(filtrada);
+
+  }
+
+
   function renderizar(lista) {
 
     if (!lista || lista.length === 0) {
       document.getElementById('contenido').innerHTML =
-        '<div id="vacio">🎉 Todas las invitaciones asignadas ya fueron enviadas.</div>';
+        '<div id="vacio">No se encontraron invitados con ese criterio.</div>';
       return;
     }
 
@@ -232,9 +278,10 @@
 
   function copiarMensaje(codigo) {
 
-    const texto = document.getElementById(`msg-${codigo}`).value;
+    const item = listaCompleta.find(p => p.codigo === codigo);
+    if (!item) return;
 
-    navigator.clipboard.writeText(texto).then(() => {
+    navigator.clipboard.writeText(item.mensaje).then(() => {
       alert('Mensaje copiado. Ya puedes pegarlo en Messenger o Instagram.');
     });
 
@@ -247,8 +294,8 @@
 
       await jsonp(`${API_URL}?action=marcarEnviado&codigo=${encodeURIComponent(codigo)}`);
 
-      const item = document.getElementById(`item-${codigo}`);
-      if (item) item.remove();
+      listaCompleta = listaCompleta.filter(p => p.codigo !== codigo);
+      filtrar();
 
     } catch (error) {
       alert('No se pudo marcar como enviado. Intenta de nuevo.');
