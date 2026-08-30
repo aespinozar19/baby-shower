@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Pendientes de enviar - Baby Shower</title>
+
+  <style>
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(180deg, #f7e6d8 0%, #f3d9e3 45%, #f7e6d8 100%);
+      margin: 0;
+      padding: 24px 16px 60px;
+      color: #4a2c36;
+    }
+
+    .contenedor {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .volver {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: #b5476a;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    h1 {
+      color: #b5476a;
+      font-size: 24px;
+      margin: 0 0 4px;
+    }
+
+    .subtitulo {
+      color: #c98499;
+      margin-bottom: 24px;
+      font-size: 14.5px;
+    }
+
+    .tarjeta-invitado {
+      background: #fffdfa;
+      border: 1px solid #ecd4b8;
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(196, 155, 96, 0.12);
+    }
+
+    .nombre {
+      font-weight: 700;
+      font-size: 16.5px;
+      margin-bottom: 2px;
+    }
+
+    .telefono {
+      color: #7a4a58;
+      font-size: 13.5px;
+      margin-bottom: 12px;
+    }
+
+    .acciones {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 110px;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-whatsapp {
+      background: #25D366;
+      color: white;
+    }
+
+    .btn-copiar {
+      background: #fdf6ee;
+      border: 1.5px solid #ecd4b8;
+      color: #6b3f4d;
+    }
+
+    .btn-enviado {
+      background: #fdf6ee;
+      border: 1.5px solid #b5c98a;
+      color: #5c7a3c;
+    }
+
+    #vacio, #cargando {
+      text-align: center;
+      color: #7a4a58;
+      padding: 40px 0;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="contenedor">
+
+  <a class="volver" href="dashboard.html">← Volver al panel</a>
+
+  <h1>Pendientes de enviar</h1>
+  <div class="subtitulo">Invitados con nombre asignado que aún no han recibido su invitación</div>
+
+  <div id="contenido">
+    <div id="cargando">Cargando...</div>
+  </div>
+
+</div>
+
+
+<script>
+
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwJpgnI9n4zdA3MBl58zZloGHcj8CbV1hdbJlYTj2gvee4UUpsdvihPHV4eE3bylqo_fw/exec';
+
+
+  function jsonp(url) {
+
+    return new Promise((resolve, reject) => {
+
+      const callbackName =
+        'jsonp_callback_' + Math.round(100000 * Math.random());
+
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        resolve(data);
+      };
+
+      const script = document.createElement('script');
+
+      script.src =
+        url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+
+      script.onerror = function() {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        reject(new Error('Error de red'));
+      };
+
+      document.body.appendChild(script);
+
+    });
+
+  }
+
+
+  async function cargarDatos() {
+
+    try {
+
+      const r = await jsonp(`${API_URL}?action=pendientes`);
+      renderizar(r.pendientes);
+
+    } catch (error) {
+      document.getElementById('contenido').innerHTML =
+        '<div id="cargando">Ocurrió un error al cargar los datos.</div>';
+    }
+
+  }
+
+
+  function renderizar(lista) {
+
+    if (!lista || lista.length === 0) {
+      document.getElementById('contenido').innerHTML =
+        '<div id="vacio">🎉 Todas las invitaciones asignadas ya fueron enviadas.</div>';
+      return;
+    }
+
+    let html = '';
+
+    lista.forEach(p => {
+
+      html += `
+        <div class="tarjeta-invitado" id="item-${p.codigo}">
+          <div class="nombre">${p.invitado}</div>
+          <div class="telefono">${p.whatsapp || 'Sin WhatsApp registrado'}</div>
+          <div class="acciones">
+            ${p.linkWhatsApp
+              ? `<a class="btn btn-whatsapp" href="${p.linkWhatsApp}" target="_blank">📲 WhatsApp</a>`
+              : ''}
+            <button class="btn btn-copiar" onclick="copiarMensaje('${p.codigo}')">📋 Copiar</button>
+            <button class="btn btn-enviado" onclick="marcarEnviado('${p.codigo}')">✅ Marcar enviado</button>
+          </div>
+          <textarea id="msg-${p.codigo}" style="display:none;">${p.mensaje}</textarea>
+        </div>
+      `;
+
+    });
+
+    document.getElementById('contenido').innerHTML = html;
+
+  }
+
+
+  function copiarMensaje(codigo) {
+
+    const texto = document.getElementById(`msg-${codigo}`).value;
+
+    navigator.clipboard.writeText(texto).then(() => {
+      alert('Mensaje copiado. Ya puedes pegarlo en Messenger o Instagram.');
+    });
+
+  }
+
+
+  async function marcarEnviado(codigo) {
+
+    try {
+
+      await jsonp(`${API_URL}?action=marcarEnviado&codigo=${encodeURIComponent(codigo)}`);
+
+      const item = document.getElementById(`item-${codigo}`);
+      if (item) item.remove();
+
+    } catch (error) {
+      alert('No se pudo marcar como enviado. Intenta de nuevo.');
+    }
+
+  }
+
+
+  cargarDatos();
+
+</script>
+
+</body>
+</html>
