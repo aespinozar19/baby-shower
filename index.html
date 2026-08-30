@@ -263,7 +263,7 @@
 <script>
 
   // ⚠️ URL de tu Web App de Apps Script
-  const API_URL = 'https://script.google.com/macros/s/AKfycbwJx2t8z7FHbZPgAxoyD5aoc7KewPiDcfLGuYra8s13b1kqA7DhOHPahAaA2CCODNVUBQ/exec';
+  const API_URL = 'https://script.google.com/macros/s/AKfycbzxkIrXoayVXOitH23BdCRfR3UwRloxA2Da0z2gzpRsizrv6aNr8SSpo4u9qbkfbDQP0Q/exec';
 
   let codigo = '';
   let fechaEvento = '';
@@ -271,6 +271,7 @@
   let direccionEvento = '';
   let linkMapsEvento = '';
   let fechaLimiteTexto = '';
+  let regalosDisponibles = [];
 
 
   /**
@@ -425,6 +426,13 @@
 
       </div>
 
+      <div id="regaloWrap" style="display:none;">
+
+        <label>¿Qué regalo te gustaría traer? (opcional)</label>
+        <select id="regalo"></select>
+
+      </div>
+
       <button id="boton" onclick="registrar()">
         Confirmar asistencia
       </button>
@@ -434,12 +442,34 @@
   }
 
 
-  function cambiarAsistencia() {
+  async function cambiarAsistencia() {
 
     const asistencia = document.getElementById('asistencia').value;
     const personas = document.getElementById('personas');
+    const regaloWrap = document.getElementById('regaloWrap');
 
     personas.style.display = (asistencia === 'Sí') ? 'block' : 'none';
+
+    if (asistencia === 'Sí' || asistencia === 'No') {
+
+      if (regalosDisponibles.length === 0) {
+        const respuesta = await jsonp(`${API_URL}?action=regalos`);
+        regalosDisponibles = respuesta.regalos || [];
+      }
+
+      let opciones = '<option value="Aún no decido">Aún no decido</option>';
+
+      regalosDisponibles.forEach(r => {
+        opciones += `<option value="${r}">${r}</option>`;
+      });
+
+      document.getElementById('regalo').innerHTML = opciones;
+      regaloWrap.style.display = 'block';
+
+    } else {
+      regaloWrap.style.display = 'none';
+    }
+
   }
 
 
@@ -472,6 +502,9 @@
       ninos = Number(document.getElementById('ninos').value);
     }
 
+    const regaloSelect = document.getElementById('regalo');
+    const regalo = regaloSelect ? regaloSelect.value : 'Aún no decido';
+
     const boton = document.getElementById('boton');
     boton.disabled = true;
     boton.innerText = 'Registrando...';
@@ -481,7 +514,8 @@
       const url =
         `${API_URL}?action=registrar&codigo=${encodeURIComponent(codigo)}` +
         `&asistencia=${encodeURIComponent(asistencia)}` +
-        `&adultos=${adultos}&ninos=${ninos}`;
+        `&adultos=${adultos}&ninos=${ninos}` +
+        `&regalo=${encodeURIComponent(regalo)}`;
 
       const resultado = await jsonp(url);
 
