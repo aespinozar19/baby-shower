@@ -428,7 +428,7 @@
 
       <div id="regaloWrap" style="display:none;">
 
-        <label>¿Qué regalo te gustaría traer? (opcional)</label>
+        <div id="regaloTexto"></div>
         <select id="regalo"></select>
 
       </div>
@@ -447,6 +447,7 @@
     const asistencia = document.getElementById('asistencia').value;
     const personas = document.getElementById('personas');
     const regaloWrap = document.getElementById('regaloWrap');
+    const regaloTexto = document.getElementById('regaloTexto');
 
     personas.style.display = (asistencia === 'Sí') ? 'block' : 'none';
 
@@ -462,6 +463,18 @@
       regalosDisponibles.forEach(r => {
         opciones += `<option value="${r}">${r}</option>`;
       });
+
+      if (asistencia === 'Sí') {
+
+        regaloTexto.innerHTML =
+          '<label>¿Qué regalo te gustaría traer? (opcional)</label>';
+
+      } else {
+
+        regaloTexto.innerHTML =
+          '<label>Aunque no podrás acompañarnos, si gustas, puedes enviarnos un regalo igual 💝 (opcional)</label>';
+
+      }
 
       document.getElementById('regalo').innerHTML = opciones;
       regaloWrap.style.display = 'block';
