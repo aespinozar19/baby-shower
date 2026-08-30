@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Panel - Baby Shower</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(180deg, #f7e6d8 0%, #f3d9e3 45%, #f7e6d8 100%);
+      margin: 0;
+      padding: 24px 16px 60px;
+      color: #4a2c36;
+    }
+
+    .contenedor {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #b5476a;
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    .subtitulo {
+      text-align: center;
+      color: #c98499;
+      margin-bottom: 28px;
+      font-size: 15px;
+    }
+
+    .tarjetas {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+    @media (min-width: 500px) {
+      .tarjetas {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .tarjeta {
+      background: #fffdfa;
+      border: 1px solid #ecd4b8;
+      border-radius: 16px;
+      padding: 18px 14px;
+      text-align: center;
+      box-shadow: 0 4px 14px rgba(196, 155, 96, 0.15);
+    }
+
+    .tarjeta .numero {
+      font-size: 30px;
+      font-weight: 800;
+      color: #b5476a;
+      line-height: 1.1;
+    }
+
+    .tarjeta .etiqueta {
+      font-size: 12.5px;
+      color: #7a4a58;
+      margin-top: 4px;
+    }
+
+    .seccion-titulo {
+      font-size: 18px;
+      font-weight: 700;
+      color: #4a2c36;
+      margin: 30px 0 14px;
+    }
+
+    .regalo-item {
+      background: #fffdfa;
+      border: 1px solid #ecd4b8;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+    }
+
+    .regalo-nombre {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14.5px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .regalo-cantidad {
+      color: #7a4a58;
+      font-weight: 500;
+    }
+
+    .barra-fondo {
+      background: #f0e2d0;
+      border-radius: 8px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .barra-relleno {
+      background: linear-gradient(135deg, #c8688b, #b5476a);
+      height: 100%;
+      transition: width 0.3s;
+    }
+
+    .barra-relleno.lleno {
+      background: linear-gradient(135deg, #8fae6e, #6c9150);
+    }
+
+    #cargando {
+      text-align: center;
+      color: #b5476a;
+      padding: 40px 0;
+    }
+
+    .actualizado {
+      text-align: center;
+      color: #a98a94;
+      font-size: 12.5px;
+      margin-top: 30px;
+    }
+
+    button.refrescar {
+      display: block;
+      margin: 20px auto 0;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background: #b5476a;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="contenedor">
+
+  <h1>Panel de control</h1>
+  <div class="subtitulo">Baby Shower — Diego y Sofía</div>
+
+  <div id="contenido">
+    <div id="cargando">Cargando datos...</div>
+  </div>
+
+</div>
+
+
+<script>
+
+  // ⚠️ Misma URL de tu Web App de Apps Script
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwJpgnI9n4zdA3MBl58zZloGHcj8CbV1hdbJlYTj2gvee4UUpsdvihPHV4eE3bylqo_fw/exec';
+
+
+  function jsonp(url) {
+
+    return new Promise((resolve, reject) => {
+
+      const callbackName =
+        'jsonp_callback_' + Math.round(100000 * Math.random());
+
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        resolve(data);
+      };
+
+      const script = document.createElement('script');
+
+      script.src =
+        url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+
+      script.onerror = function() {
+        delete window[callbackName];
+        document.body.removeChild(script);
+        reject(new Error('Error de red'));
+      };
+
+      document.body.appendChild(script);
+
+    });
+
+  }
+
+
+  async function cargarDatos() {
+
+    try {
+
+      const r = await jsonp(`${API_URL}?action=resumen`);
+
+      renderizar(r);
+
+    } catch (error) {
+
+      document.getElementById('contenido').innerHTML =
+        '<div id="cargando">Ocurrió un error al cargar los datos.</div>';
+
+    }
+
+  }
+
+
+  function renderizar(r) {
+
+    let regalosHtml = '';
+
+    r.regalos.forEach(regalo => {
+
+      const porcentaje =
+        regalo.cupo > 0
+          ? Math.min(100, Math.round((regalo.reservados / regalo.cupo) * 100))
+          : 0;
+
+      const lleno = regalo.reservados >= regalo.cupo;
+
+      regalosHtml += `
+        <div class="regalo-item">
+          <div class="regalo-nombre">
+            <span>${regalo.nombre}</span>
+            <span class="regalo-cantidad">${regalo.reservados} / ${regalo.cupo}</span>
+          </div>
+          <div class="barra-fondo">
+            <div class="barra-relleno ${lleno ? 'lleno' : ''}" style="width:${porcentaje}%;"></div>
+          </div>
+        </div>
+      `;
+
+    });
+
+    document.getElementById('contenido').innerHTML = `
+
+      <div class="tarjetas">
+
+        <div class="tarjeta">
+          <div class="numero">${r.totalInvitados}</div>
+          <div class="etiqueta">Invitaciones enviadas</div>
+        </div>
+
+        <div class="tarjeta">
+          <div class="numero">${r.confirmados}</div>
+          <div class="etiqueta">Confirmados</div>
+        </div>
+
+        <div class="tarjeta">
+          <div class="numero">${r.pendientes}</div>
+          <div class="etiqueta">Pendientes</div>
+        </div>
+
+        <div class="tarjeta">
+          <div class="numero">${r.noAsisten}</div>
+          <div class="etiqueta">No asistirán</div>
+        </div>
+
+        <div class="tarjeta">
+          <div class="numero">${r.adultos}</div>
+          <div class="etiqueta">Adultos confirmados</div>
+        </div>
+
+        <div class="tarjeta">
+          <div class="numero">${r.ninos}</div>
+          <div class="etiqueta">Niños confirmados</div>
+        </div>
+
+        <div class="tarjeta" style="grid-column: span 2;">
+          <div class="numero">${r.totalPersonas}</div>
+          <div class="etiqueta">TOTAL de personas al evento</div>
+        </div>
+
+      </div>
+
+      <div class="seccion-titulo">Estado de regalos</div>
+
+      ${regalosHtml}
+
+      <button class="refrescar" onclick="cargarDatos()">🔄 Actualizar</button>
+
+      <div class="actualizado">
+        Última actualización: ${new Date().toLocaleTimeString('es-PE')}
+      </div>
+
+    `;
+
+  }
+
+
+  cargarDatos();
+
+  // Auto-actualizar cada 60 segundos
+  setInterval(cargarDatos, 60000);
+
+</script>
+
+</body>
+</html>
