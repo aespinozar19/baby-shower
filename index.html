@@ -433,7 +433,7 @@
 
       </div>
 
-      <button id="boton" onclick="registrar()">
+      <button id="boton" onclick="registrar()" disabled>
         Confirmar asistencia
       </button>
 
@@ -448,10 +448,15 @@
     const personas = document.getElementById('personas');
     const regaloWrap = document.getElementById('regaloWrap');
     const regaloTexto = document.getElementById('regaloTexto');
+    const boton = document.getElementById('boton');
 
     personas.style.display = (asistencia === 'Sí') ? 'block' : 'none';
 
     if (asistencia === 'Sí' || asistencia === 'No') {
+
+      // Deshabilitar mientras se carga la lista de regalos
+      boton.disabled = true;
+      boton.innerText = 'Cargando opciones...';
 
       if (regalosDisponibles.length === 0) {
         const respuesta = await jsonp(`${API_URL}?action=regalos`);
@@ -479,8 +484,14 @@
       document.getElementById('regalo').innerHTML = opciones;
       regaloWrap.style.display = 'block';
 
+      // Ya cargó, habilitar el botón de nuevo
+      boton.disabled = false;
+      boton.innerText = 'Confirmar asistencia';
+
     } else {
       regaloWrap.style.display = 'none';
+      boton.disabled = true;
+      boton.innerText = 'Confirmar asistencia';
     }
 
   }
